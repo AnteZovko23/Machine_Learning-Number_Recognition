@@ -8,7 +8,9 @@ from draw import start
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image, ImageOps, ImageChops
-from io import BytesIO
+
+import mplcursors
+
 ## Found here: https://www.toptal.com/data-science/machine-learning-number-recognition
 # Image preprocessing to make it similar to training data #############################
 
@@ -82,14 +84,64 @@ def load_image(filename):
     return img
 
 
-def show_image(img, label, guess):
-    plt.figure()
+
+## Plots all the possibilities as a bar graph
+def plot_possibilities(guess_array, ind_length = 10):
+
+    plt.figure(100)
+
+    ## X axis
+    ind = np.arange(ind_length)
+    width = 0.35
+
+    ## Guess array rounded to 10 decimal places
+
+    ## Reformat array to be one dimensional
+    guess_array = np.array(guess_array[0])
+    print(guess_array)
+    # format for title
+    guess_array_title = {ind[i]:f'{(guess_array[i] * 100):.5f} %' for i in range(len(guess_array))}
+    
+
+    ## Make window bigger
+    manager = plt.get_current_fig_manager()
+    manager.window.maximize()
+
+
+    # Graph
+    plt.ylim(0, 1)
+    plt.title(guess_array_title)
+    plt.bar(ind, guess_array, width, label="a")
+
+
+
+    # With HoverMode.Transient, the annotation is removed as soon as the mouse
+    # leaves the artist.  Alternatively, one can use HoverMode.Persistent (or True)
+    # which keeps the annotation until another artist gets selected.
+    cursor = mplcursors.cursor(hover=mplcursors.HoverMode.Transient)
+    @cursor.connect("add")
+    def on_add(sel):
+        x, y, width, height = sel.artist[sel.target.index].get_bbox().bounds
+        sel.annotation.set(text=f"{sel.target.index}:{round((height*100), 10)}%",
+                       position=(0, 20), anncoords="offset points")
+        sel.annotation.xy = (x + width / 2, y + height)
+
+    plt.show()
+
+
+# Shows the guess
+def show_image(img, guess):
+    plt.figure(200)
     plt.imshow(img, cmap='gray')
-    plt.title("Excpected: " + label)
-    plt.xlabel("Guess: " + guess)
+    plt.title("Guess: " + guess)
     plt.colorbar()
     plt.grid(False)
+    
+
     plt.show()
+
+
+model = load_model()
 
 while(True):
     start()
@@ -97,12 +149,16 @@ while(True):
 
     img = load_image(imgPath)
 
-    model = load_model()
+    prediction = model.predict(img)
 
     # New syntax
-    guess = np.argmax(model.predict(img), axis=-1)
+    guess = np.argmax(prediction, axis=-1)
     img = img.reshape(28,28, 1)
-    show_image(img, imgPath[2:3], str(guess[0]))
+
+    # Graphs!
+    show_image(img, str(guess[0]))
+    plot_possibilities(prediction)
+
 
 
 
