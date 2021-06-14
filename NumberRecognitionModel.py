@@ -2,6 +2,12 @@ from tensorflow import  keras
 
 import tensorflow as tf
 
+
+import seaborn as sns
+import matplotlib as mpl
+import sklearn
+from sklearn.metrics import confusion_matrix
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -10,6 +16,16 @@ from sklearn.model_selection import KFold
 from tensorflow.python.keras.layers.normalization import BatchNormalization
 
 ### Overhead ######
+
+
+# ImageDataGenerator
+datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+            rotation_range=10, # rotation
+            width_shift_range=0.2, # horizontal shift
+            height_shift_range=0.2, # vertical shift
+            zoom_range=0.2, # zoom
+            horizontal_flip=True, # horizontal flip
+            brightness_range=[0.2,1.2]) # brightness
 
 ## Load data
 def load_data():
@@ -20,6 +36,8 @@ def load_data():
     ## Encode labels
     train_labels = keras.utils.to_categorical(train_labels)
     test_labels = keras.utils.to_categorical(test_labels)
+
+    
 
     return train_images, train_labels, test_images, test_labels
 
@@ -100,6 +118,15 @@ def plot_performance(scores, histories):
         plt.plot(histories[i].history['val_accuracy'], color='orange', label='test')
     plt.show()
 
+
+
+
+
+
+
+
+################ Useful plots ########################
+
 ## Start Training and Evaluation
 def start():
     
@@ -113,6 +140,7 @@ def start():
     scores, histories = evaluate_model(trainImages, trainLabels, 5, 32, 10, 128, 64)
 
     plot_performance(scores, histories)
+
 
 def save_model(model):
     model.save('my_model')
